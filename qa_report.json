@@ -1,0 +1,53 @@
+{
+    "4958 avenue grosvenor montreal h3w2m1": [
+        {
+            "run": 1,
+            "valeur": "799 000 $",
+            "loyer": "1900 $"
+        },
+        {
+            "run": 2,
+            "valeur": "799 000 $",
+            "loyer": "1900 $"
+        },
+        {
+            "run": 3,
+            "valeur": "799 000 $",
+            "loyer": "1900 $"
+        }
+    ],
+    "77 avenue sunnyside westmount": [
+        {
+            "run": 1,
+            "valeur": "2 622 500 $",
+            "loyer": "2822 $"
+        },
+        {
+            "run": 2,
+            "valeur": "2 622 500 $",
+            "loyer": "2822 $"
+        },
+        {
+            "run": 3,
+            "valeur": "2 622 500 $",
+            "loyer": "2822 $"
+        }
+    ],
+    "1581 rue du vivandier, trois-rivi\u00e8res, QC G8Y0L7": [
+        {
+            "run": 1,
+            "valeur": "417 249 $",
+            "loyer": "1705 $"
+        },
+        {
+            "run": 2,
+            "valeur": "417 249 $",
+            "loyer": "1705 $"
+        },
+        {
+            "run": 3,
+            "valeur": "417 249 $",
+            "loyer": "1705 $"
+        }
+    ]
+}

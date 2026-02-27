@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estimateur de Loyer Automatisé</title>
+    <!-- Utilisation de Google Fonts pour une typographie moderne -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --secondary: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --bg-body: #f1f5f9;
+            --white: #ffffff;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background-color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card {
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .result-card h3 {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.85rem;
+        }
+
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .data-label {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .data-value {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .reco-box {
+            background: linear-gradient(135deg, #2563eb, #1e40af);
+            color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .reco-box h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .reco-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        /* Logs section */
+        .logs-section {
+            margin-top: 2rem;
+            border-top: 2px solid var(--border);
+            padding-top: 2rem;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .logs-header h3 {
+            font-size: 1.2rem;
+            color: var(--text-main);
+        }
+
+        .toggle-advanced {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .log-container {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .log-entry {
+            margin-bottom: 0.5rem;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .log-entry::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+        }
+
+        .log-info {
+            color: #e2e8f0;
+        }
+
+        .log-warning {
+            color: #fbbf24;
+        }
+
+        .log-error {
+            color: #f87171;
+        }
+
+        .log-details {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 2px solid #ef4444;
+            color: #fca5a5;
+            white-space: pre-wrap;
+            font-size: 0.8rem;
+        }
+
+        .show-advanced .log-details {
+            display: block;
+        }
+
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Estimateur de Loyer</h1>
+            <p>Analyse automatisée du marché immobilier québécois</p>
+        </header>
+
+        <div class="card">
+            <div class="search-box">
+                <input type="text" id="addressInput"
+                    placeholder="Saisissez une adresse (ex: 123 rue Principale, Montréal)" autofocus autocomplete="off">
+                <button id="estimateBtn">
+                    <span id="btnText">Estimer</span>
+                    <div class="loader" id="btnLoader"></div>
+                </button>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection">
+            <div class="result-grid">
+                <!-- Analyse du Secteur -->
+                <div class="result-card">
+                    <h3>Analyse du Secteur</h3>
+                    <div class="data-row">
+                        <span class="data-label">Type dominant</span>
+                        <span class="data-value" id="resDominantType">-</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Présence locatif</span>
+                        <span class="data-value" id="resLocativePresence">-</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Valeur moyenne</span>
+                        <span class="data-value" id="resAverageValue">-</span>
+                    </div>
+                </div>
+
+                <!-- Marché Locatif -->
+                <div class="result-card">
+                    <h3>Marché Locatif (Fourchettes)</h3>
+                    <div class="data-row">
+                        <span class="data-label">Studio / 1½</span>
+                        <span class="data-value" id="res1_5">-</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">3½</span>
+                        <span class="data-value" id="res3_5">-</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">4½</span>
+                        <span class="data-value" id="res4_5">-</span>
+                    </div>
+                    <div class="data-row">
+                        <span class="data-label">Maison</span>
+                        <span class="data-value" id="resHouse">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommandations -->
+            <div class="reco-box">
+                <h3>Loyers Mensuels Recommandés</h3>
+                <div
+                    style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Studio / 1½ - 2½</div>
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="reco1_5">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Petit (3½)</div>
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="reco3_5">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Moyen (4½ - 5½)</div>
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="reco4_5">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; opacity: 0.9;">Maison</div>
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="recoHouse">-</div>
+                    </div>
+                </div>
+                <div
+                    style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px;">
+                    Moyenne observée: <span id="resAverage">-</span><br>
+                    <span style="font-size: 0.8rem">Sources: <span id="resSources">-</span></span>
+                </div>
+            </div>
+
+            <!-- Traces d'exécution -->
+            <div class="logs-section">
+                <div class="logs-header">
+                    <h3>Traces d'exécution</h3>
+                    <label class="toggle-advanced">
+                        <input type="checkbox" id="advancedToggle">
+                        Mode Avancé (erreurs techniques)
+                    </label>
+                </div>
+                <div class="log-container" id="logContainer">
+                    <!-- Les logs s'afficheront ici -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const addressInput = document.getElementById('addressInput');
+        const estimateBtn = document.getElementById('estimateBtn');
+        const btnText = document.getElementById('btnText');
+        const btnLoader = document.getElementById('btnLoader');
+        const resultsSection = document.getElementById('resultsSection');
+        const logContainer = document.getElementById('logContainer');
+        const advancedToggle = document.getElementById('advancedToggle');
+
+        // Bascule de la classe 'show-advanced' pour révéler les stacktraces
+        advancedToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                logContainer.classList.add('show-advanced');
+            } else {
+                logContainer.classList.remove('show-advanced');
+            }
+        });
+
+        // Fonction pour formater et ajouter un log dans l'UI
+        function appendLog(log) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${log.level || 'info'}`;
+
+            let timeStr = new Date().toLocaleTimeString('fr-FR');
+            let mainText = `[${timeStr}] ${log.message || log}`;
+
+            entry.textContent = mainText;
+
+            // Si le log possède des détails techniques (stacktrace), l'ajouter
+            if (log.details) {
+                const detailsDiv = document.createElement('div');
+                detailsDiv.className = 'log-details';
+                detailsDiv.textContent = log.details;
+                entry.appendChild(detailsDiv);
+            }
+
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // Action sur le clic du bouton
+        estimateBtn.addEventListener('click', async () => {
+            const address = addressInput.value.trim();
+            if (!address) {
+                alert("Veuillez saisir une adresse valide.");
+                return;
+            }
+
+            // UI état chargement
+            estimateBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'inline-block';
+            resultsSection.style.display = 'block';
+            logContainer.innerHTML = '';
+
+            appendLog({ message: "Initialisation de la demande...", level: "info" });
+
+            try {
+                // Appel API vers le backend Flask local
+                const response = await fetch('http://127.0.0.1:5000/api/estimate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ address: address })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Affichage des logs reçus depuis le backend
+                if (data.logs && Array.isArray(data.logs)) {
+                    logContainer.innerHTML = ''; // Nettoie le log init
+                    data.logs.forEach(log => appendLog(log));
+                }
+
+                // Remplissage des données Analyse secteur
+                if (data.sector_analysis) {
+                    document.getElementById('resDominantType').textContent = data.sector_analysis.dominant_type;
+                    document.getElementById('resLocativePresence').textContent = data.sector_analysis.locative_presence;
+                    document.getElementById('resAverageValue').textContent = data.sector_analysis.average_value;
+                }
+
+                // Remplissage des données Marché Locatif
+                if (data.rental_market) {
+                    document.getElementById('res1_5').textContent = data.rental_market['1_5'];
+                    document.getElementById('res3_5').textContent = data.rental_market['3_5'];
+                    document.getElementById('res4_5').textContent = data.rental_market['4_5'];
+                    document.getElementById('resHouse').textContent = data.rental_market.house;
+                    document.getElementById('resAverage').textContent = data.rental_market.average;
+                }
+
+                // Remplissage Recommandation et sources
+                if (data.recommendation && typeof data.recommendation === 'object') {
+                    document.getElementById('reco1_5').textContent = data.recommendation['1_5'];
+                    document.getElementById('reco3_5').textContent = data.recommendation['3_5'];
+                    document.getElementById('reco4_5').textContent = data.recommendation['4_5'];
+                    document.getElementById('recoHouse').textContent = data.recommendation.house;
+                } else if (data.recommendation) {
+                    // Fallback
+                    document.getElementById('reco3_5').textContent = data.recommendation;
+                }
+                if (data.sources) {
+                    document.getElementById('resSources').textContent = data.sources.join(', ');
+                }
+
+            } catch (err) {
+                appendLog({
+                    message: "La communication avec le backend a échoué. Assurez-vous que python backend.py est bien lancé.",
+                    level: "error",
+                    details: err.toString()
+                });
+            } finally {
+                // Restauration UI
+                estimateBtn.disabled = false;
+                btnText.style.display = 'inline-block';
+                btnLoader.style.display = 'none';
+            }
+        });
+
+        // Entrée valide aussi le formulaire
+        addressInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                estimateBtn.click();
+            }
+        });
+    </script>
+</body>
+
+</html>
