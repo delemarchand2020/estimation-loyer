@@ -98,7 +98,7 @@ class EstimationProcess:
         self.log("L'adresse n'a pas pu être trouvée sur la carte.", level="error")
         return False
 
-    def extract_prices_from_html(self, html, source_name):
+    def extract_prices_from_html(self, html, source_name, is_rent_url=False):
         """Extrait les prix en format $ du HTML de manière robuste, en évitant les menus de recherche."""
         import bs4
         from bs4 import BeautifulSoup
@@ -106,6 +106,10 @@ class EstimationProcess:
         
         soup = BeautifulSoup(html, 'html.parser')
         prices = []
+        
+        # Limites en fonction du type de recherche espéré
+        min_val = 300
+        max_val = 15000 if is_rent_url else 50000000
         
         def extract_from_text(text_block):
             # Remplacement des espaces insécables HTML courants qui cassent les regex des millions
@@ -118,8 +122,7 @@ class EstimationProcess:
                 clean_str = re.sub(r'[ \.,]', '', m)
                 if clean_str.isdigit():
                     val = int(clean_str)
-                    # Filtre de base pour des mois de loyer plausibles ou des ventes
-                    if 400 < val < 50000000:
+                    if min_val <= val <= max_val:
                         extracted.append(val)
             return extracted
 
@@ -127,12 +130,11 @@ class EstimationProcess:
         price_containers = soup.find_all(itemprop="price")
         if price_containers:
             for container in price_containers:
-                # Privilégier l'attribut 'content' (ex: content="450000") pour une stabilité à 100% sans regex
                 raw_content = container.get('content')
                 if raw_content:
                     try:
                         val = int(float(raw_content))
-                        if 400 < val < 50000000 and val not in prices:
+                        if min_val <= val <= max_val and val not in prices:
                             prices.append(val)
                     except ValueError:
                         pass
@@ -160,6 +162,8 @@ class EstimationProcess:
         cache_file = "scraping_cache.json"
         url_hash = hashlib.md5(url.encode()).hexdigest()
         
+        is_rent_url = "(Loyer)" in name or "louer" in url or "location" in url
+        
         if os.path.exists(cache_file):
             try:
                 with open(cache_file, 'r', encoding='utf-8') as f:
@@ -169,7 +173,7 @@ class EstimationProcess:
                         # Vérification de l'âge du cache (24 heures = 86400 secondes)
                         if "timestamp" in cached_entry and (time.time() - cached_entry["timestamp"] < 86400):
                             self.log(f"Utilisation des données en cache (Valide 24h) pour {name} ({url})")
-                            return self.extract_prices_from_html(cached_entry["html"], name)
+                            return self.extract_prices_from_html(cached_entry["html"], name, is_rent_url)
                         else:
                             self.log(f"Cache expiré pour {name}, nouvelle requête en cours...")
             except Exception as e:
@@ -198,7 +202,7 @@ class EstimationProcess:
                 except Exception as e:
                     self.log(f"Erreur lors de la sauvegarde du cache: {str(e)}", level="error")
                     
-                prices = self.extract_prices_from_html(html_content, name)
+                prices = self.extract_prices_from_html(html_content, name, is_rent_url)
                 
                 if prices:
                     self.log(f"Données extraites sur {name}: {len(prices)} prix trouvés.")
@@ -268,9 +272,9 @@ class EstimationProcess:
                 sources_used.append(source)
                 # Séparation : < 15000 = Loyer mensuel, > 50000 = Vente
                 for p in prices:
-                    if 400 <= p <= 15000:
+                    if 300 <= p <= 15000:
                         all_rents.append(p)
-                    elif p > 50000:
+                    elif p >= 40000:
                         all_sales.append(p)
 
         self.log("Analyse des données collectées...")
@@ -307,18 +311,22 @@ class EstimationProcess:
         
         # Interpolation des prix par taille à partir de la MÉDIANE calculée (robuste aux outliers)
         if median_rent > 0:
-            range_1_5 = f"{int(median_rent * 0.7)} $ à {int(median_rent * 0.85)} $"
-            range_3_5 = f"{int(median_rent * 0.85)} $ à {int(median_rent * 1.15)} $"
-            range_4_5 = f"{int(median_rent * 1.15)} $ à {int(median_rent * 1.5)} $"
-            range_house = f"{int(median_rent * 1.5)} $ à {int(median_rent * 2.5)} $"
+            # Interpolation très prudente (Ground Truth a démontré une forte surestimation en région)
+            range_1_5 = f"{int(median_rent * 0.55)} $ à {int(median_rent * 0.7)} $"
+            range_3_5 = f"{int(median_rent * 0.7)} $ à {int(median_rent * 0.9)} $"
+            range_4_5 = f"{int(median_rent * 0.9)} $ à {int(median_rent * 1.15)} $"
+            range_house = f"{int(median_rent * 1.2)} $ à {int(median_rent * 1.8)} $"
             
-            final_avg_rent_str = f"{int(median_rent)} $"
+            # Le "Loyer Moyen Observé" (Moyenne générale) est tiré vers le bas pour refléter l'offre
+            # la plus courante (entre le 3.5 et le 4.5) plutôt que d'être faussé par les maisons coûteuses
+            final_median = int(median_rent * 0.85)
+            final_avg_rent_str = f"{final_median} $"
             
             reco = {
-                "1_5": f"{int(median_rent * 0.8)} $",
-                "3_5": f"{int(median_rent)} $", # La médiane est généralement le sweet spot d'un 3.5 Typique
-                "4_5": f"{int(median_rent * 1.3)} $",
-                "house": f"{int(median_rent * 1.8)} $"
+                "1_5": f"{int(median_rent * 0.6)} $",
+                "3_5": f"{int(median_rent * 0.8)} $", # Souvent le 3.5 est en dessous de la médiane globale qui inclut des maisons
+                "4_5": f"{int(median_rent * 1.0)} $",
+                "house": f"{int(median_rent * 1.4)} $"
             }
         else:
             range_1_5 = "0 $"

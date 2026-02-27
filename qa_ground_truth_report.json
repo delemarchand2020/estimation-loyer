@@ -1,0 +1,57 @@
+[
+    {
+        "address": "14 JOHN-STROM RU, GRANBY, QC J2J0N9",
+        "expected": 1100.0,
+        "estimated": 1381,
+        "difference": 281.0,
+        "difference_percent": 25.545454545454543,
+        "sources": [
+            "Centris (Ville/Loyer)",
+            "Centris (Ville/Vente)"
+        ]
+    },
+    {
+        "address": "67 SACRE-COEUR-SAGUENAY RU, SACRE-COEUR-SAGUENAY, QC G0T1Y0",
+        "expected": 823.0,
+        "estimated": 1456,
+        "difference": 633.0,
+        "difference_percent": 76.91373025516404,
+        "sources": [
+            "Centris (Ville/Loyer)",
+            "Centris (Ville/Vente)"
+        ]
+    },
+    {
+        "address": "A-5 NOTRE-DAME RU, WARWICK, QC J0A1M0",
+        "expected": 1425.0,
+        "estimated": 1232,
+        "difference": -193.0,
+        "difference_percent": -13.543859649122808,
+        "sources": [
+            "Centris (Ville/Loyer)",
+            "Centris (Ville/Vente)"
+        ]
+    },
+    {
+        "address": "4-1841 KIROUAC RU, LONGUEUIL, QC J4G1T6",
+        "expected": 1310.0,
+        "estimated": 1676,
+        "difference": 366.0,
+        "difference_percent": 27.938931297709924,
+        "sources": [
+            "Centris (Ville/Loyer)",
+            "Centris (Ville/Vente)"
+        ]
+    },
+    {
+        "address": "3-240 GEORGES RU, LACHUTE, QC J8H2A1",
+        "expected": 850.0,
+        "estimated": 1143,
+        "difference": 293.0,
+        "difference_percent": 34.470588235294116,
+        "sources": [
+            "Centris (Ville/Loyer)",
+            "Centris (Ville/Vente)"
+        ]
+    }
+]
